@@ -1,0 +1,15 @@
+forced_login_method = "chatgpt"
+cli_auth_credentials_store = "file"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+web_search = "live"
+
+[features]
+memories = true
+multi_agent = true
+
+[sandbox_workspace_write]
+network_access = true
+
+# project = "__PROJECT_SLUG__"
+

@@ -1,0 +1,21 @@
+{
+  "name": "__PROJECT_SLUG__ integration",
+  "image": "ghcr.io/pyrodie18/ansible-dev:2026.08.01",
+  "remoteUser": "vscode",
+  "runArgs": [
+    "--security-opt",
+    "seccomp=unconfined"
+  ],
+  "containerEnv": {
+    "CODEX_HOME": "/home/vscode/.codex",
+    "SSH_AUTH_SOCK": "/tmp/codex-dev-ssh-agent.sock"
+  },
+  "initializeCommand": "${localEnv:HOME}/devel/dev-environments/scripts/ensure-ssh-agent && install -d -m 0700 -o 1000 -g 1000 ${localEnv:HOME}/.local/state/codex-dev/__PROJECT_SLUG__-integration",
+  "mounts": [
+    "type=bind,source=${localEnv:HOME}/.local/state/codex-dev/__PROJECT_SLUG__-integration,target=/home/vscode/.codex",
+    "type=bind,source=/run/codex-dev-ssh-agent-1000/agent.sock,target=/tmp/codex-dev-ssh-agent.sock",
+    "type=volume,source=__PROJECT_SLUG__-integration-uv-cache,target=/home/vscode/.cache/uv",
+    "type=volume,source=__PROJECT_SLUG__-integration-ansible-cache,target=/home/vscode/.ansible"
+  ],
+  "postCreateCommand": "bootstrap-codex-home __PROJECT_SLUG__-integration && uv sync --frozen --group dev && uv run --frozen ansible-galaxy collection install -r requirements.yml -p .ansible/collections"
+}

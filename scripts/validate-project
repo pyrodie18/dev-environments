@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -gt 0 ]]; then
+    repo_root="$1"
+else
+    repo_root="$(git rev-parse --show-toplevel)"
+fi
+cd "${repo_root}"
+
+for path in .devcontainer/devcontainer.json .codex/config.toml AGENTS.md; do
+    [[ -e "${path}" ]] || { printf 'missing required path: %s\n' "${path}" >&2; exit 1; }
+done
+
+python3 -m json.tool .devcontainer/devcontainer.json >/dev/null
+
+if rg -n --hidden --glob '!.git/**' --glob '!scripts/validate-*' \
+    '(OPENAI_API_KEY=|type=bind,source=.*/\.ssh|/var/run/docker\.sock|apparmor=unconfined|--privileged|SYS_ADMIN)' .; then
+    printf 'unsafe credential or container setting found\n' >&2
+    exit 1
+fi
+
+if rg -n '__PLACEHOLDER__' .; then
+    printf 'unresolved project template placeholder\n' >&2
+    exit 1
+fi
+
+printf 'project validation passed: %s\n' "${repo_root}"

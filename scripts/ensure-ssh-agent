@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+container_uid="${CODEX_DEV_CONTAINER_UID:-1000}"
+container_gid="${CODEX_DEV_CONTAINER_GID:-1000}"
+container_user="$(getent passwd "${container_uid}" | cut -d: -f1)"
+agent_socket="${CODEX_DEV_SSH_AUTH_SOCK:-/run/codex-dev-ssh-agent-${container_uid}/agent.sock}"
+key_file="${CODEX_DEV_SSH_KEY:-${HOME}/.ssh/id_ed25519}"
+agent_dir="$(dirname "${agent_socket}")"
+
+if [[ -z "${container_user}" ]]; then
+    printf 'No host user exists for container UID %s\n' "${container_uid}" >&2
+    exit 1
+fi
+
+install -d -m 0700 -o "${container_uid}" -g "${container_gid}" "${agent_dir}"
+
+as_container_user() {
+    if [[ "$(id -u)" == "${container_uid}" ]]; then
+        "$@"
+    else
+        runuser -u "${container_user}" -- "$@"
+    fi
+}
+
+load_key() {
+    if [[ "$(id -u)" == "${container_uid}" ]]; then
+        SSH_AUTH_SOCK="${agent_socket}" ssh-add "${key_file}"
+    else
+        runuser -u "${container_user}" -- \
+            env SSH_AUTH_SOCK="${agent_socket}" ssh-add - <"${key_file}"
+    fi
+}
+
+if [[ -S "${agent_socket}" ]]; then
+    if as_container_user env SSH_AUTH_SOCK="${agent_socket}" ssh-add -l >/dev/null 2>&1; then
+        exit 0
+    fi
+
+    if load_key >/dev/null 2>&1; then
+        exit 0
+    fi
+
+    rm -f -- "${agent_socket}"
+fi
+
+if [[ -e "${agent_socket}" ]]; then
+    printf 'SSH agent path exists and is not a socket: %s\n' "${agent_socket}" >&2
+    exit 1
+fi
+
+if [[ ! -f "${key_file}" ]]; then
+    printf 'SSH private key not found: %s\n' "${key_file}" >&2
+    exit 1
+fi
+
+as_container_user ssh-agent -a "${agent_socket}" >/dev/null
+load_key

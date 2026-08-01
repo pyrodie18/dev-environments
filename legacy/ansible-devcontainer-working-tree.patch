@@ -1,0 +1,57 @@
+diff --git a/.devcontainer/Dockerfile b/.devcontainer/Dockerfile
+index 78c04dc..12633af 100644
+--- a/.devcontainer/Dockerfile
++++ b/.devcontainer/Dockerfile
+@@ -1,17 +1,24 @@
+-FROM geerlingguy/docker-ubuntu2204-ansible:latest
++FROM python:3.11-bookworm
+ 
+ LABEL maintainer="Troy Ward"
+ # Install dependencies.
+ RUN apt-get update \
+     && apt-get install -y --no-install-recommends \
+-    openssh-client \
++    openssh-client\
++    vim iputils-ping \
++    yq \
++    jq \
++    git \
++    curl \
++    ca-certificates \
++    bubblewrap \
+     && rm -Rf /var/lib/apt/lists/* \
+     && rm -Rf /usr/share/doc && rm -Rf /usr/share/man \
+     && apt-get clean
+ 
+-COPY requirements.txt /tmp/requirements.txt
+-COPY ansible-requirements.yml /tmp/ansible-requirements.yml
++# COPY requirements.txt /tmp/requirements.txt
++# COPY ansible-requirements.yml /tmp/ansible-requirements.yml
+ 
+-# Install Ansible via Pip.
+-RUN pip3 install -r /tmp/requirements.txt
+-RUN ansible-galaxy install -r /tmp/ansible-requirements.yml
++# # Install Ansible via Pip.
++# RUN pip3 install -r /tmp/requirements.txt
++# RUN ansible-galaxy install -r /tmp/ansible-requirements.yml
+diff --git a/.devcontainer/requirements.txt b/.devcontainer/requirements.txt
+index 9d597b6..2eb98ae 100644
+--- a/.devcontainer/requirements.txt
++++ b/.devcontainer/requirements.txt
+@@ -1,8 +1,11 @@
+ # Install CI dependencies for the Zabbix Roles
+-ansible-core
++#ansible-core #<2.17
++ansible-core >= 2.20.0
++netaddr == 1.2.1
+ docker
+ molecule
+ netaddr
+ pytest
+ pytest-testinfra
+-antsibull-changelog
++antsibull-changelog
++debugpy
+
+The corresponding `devcontainer.json` changes added broad SSH, Codex state, API-key environment, Docker, seccomp, and AppArmor exposure. Those settings are recorded in the legacy Git working tree at migration time but are not reproduced because the replacement design removes them.
+

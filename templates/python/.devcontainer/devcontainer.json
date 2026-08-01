@@ -1,0 +1,33 @@
+{
+  "name": "__PROJECT_NAME__",
+  "image": "ghcr.io/pyrodie18/python-dev:2026.08.01",
+  "remoteUser": "vscode",
+  "runArgs": [
+    "--security-opt",
+    "seccomp=unconfined"
+  ],
+  "containerEnv": {
+    "CODEX_HOME": "/home/vscode/.codex",
+    "SSH_AUTH_SOCK": "/tmp/codex-dev-ssh-agent.sock"
+  },
+  "initializeCommand": "${localEnv:HOME}/devel/dev-environments/scripts/ensure-ssh-agent && install -d -m 0700 -o 1000 -g 1000 ${localEnv:HOME}/.local/state/codex-dev/__PROJECT_SLUG__",
+  "mounts": [
+    "type=bind,source=${localEnv:HOME}/.local/state/codex-dev/__PROJECT_SLUG__,target=/home/vscode/.codex",
+    "type=bind,source=/run/codex-dev-ssh-agent-1000/agent.sock,target=/tmp/codex-dev-ssh-agent.sock",
+    "type=volume,source=__PROJECT_SLUG__-uv-cache,target=/home/vscode/.cache/uv"
+  ],
+  "postCreateCommand": "bootstrap-codex-home __PROJECT_SLUG__ && uv sync --frozen --group dev",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.debugpy",
+        "openai.chatgpt"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python"
+      }
+    }
+  }
+}

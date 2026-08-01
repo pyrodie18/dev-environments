@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+image_owner="${OWNER:-pyrodie18}"
+image_version="${IMAGE_VERSION:-2026.08.01}"
+
+docker build \
+    --file images/python/Dockerfile \
+    --tag "ghcr.io/${image_owner}/python-dev:${image_version}" \
+    .
+
+docker build \
+    --file images/ansible/Dockerfile \
+    --tag "ghcr.io/${image_owner}/ansible-dev:${image_version}" \
+    .
+
+for image in python-dev ansible-dev; do
+    docker run --rm \
+        "ghcr.io/${image_owner}/${image}:${image_version}" \
+        sh -lc 'test "$(id -u)" = 1000 && test "$(id -un)" = vscode && command -v codex && codex --version'
+done

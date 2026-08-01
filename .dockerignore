@@ -1,0 +1,8 @@
+.git
+.github
+legacy
+migration
+templates
+README.md
+AGENTS.md
+Makefile

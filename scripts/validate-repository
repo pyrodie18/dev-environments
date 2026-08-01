@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "${repo_root}"
+
+required=(
+    AGENTS.md
+    images/python/Dockerfile
+    images/ansible/Dockerfile
+    templates/python/.devcontainer/devcontainer.json
+    templates/ansible-collection/.devcontainer/devcontainer.json
+    templates/ansible-integration/.devcontainer/devcontainer.json
+    scripts/bootstrap-codex-home
+    scripts/build-images
+    scripts/ensure-ssh-agent
+)
+
+for path in "${required[@]}"; do
+    [[ -e "${path}" ]] || { printf 'missing required path: %s\n' "${path}" >&2; exit 1; }
+done
+
+python3 -m json.tool templates/python/.devcontainer/devcontainer.json >/dev/null
+python3 -m json.tool templates/ansible-collection/.devcontainer/devcontainer.json >/dev/null
+python3 -m json.tool templates/ansible-integration/.devcontainer/devcontainer.json >/dev/null
+
+if rg -n --hidden --glob '!.git/**' --glob '!migration/**' --glob '!legacy/**' --glob '!scripts/validate-*' \
+    '(OPENAI_API_KEY=|type=bind,source=.*/\.ssh|/var/run/docker\.sock|apparmor=unconfined|--privileged|SYS_ADMIN)' .; then
+    printf 'unsafe shared credential or container setting found\n' >&2
+    exit 1
+fi
+
+if rg -n '__PLACEHOLDER__' images; then
+    printf 'unresolved placeholder outside templates\n' >&2
+    exit 1
+fi
+
+printf 'repository validation passed\n'

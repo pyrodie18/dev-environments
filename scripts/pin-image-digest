@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+image="${1:?usage: pin-image-digest <registry-image:tag> [devcontainer-json]}"
+devcontainer="${2:-.devcontainer/devcontainer.json}"
+digest="$(docker buildx imagetools inspect "${image}" --format '{{json .Manifest.Digest}}' | tr -d '"')"
+
+[[ "${digest}" == sha256:* ]] || { printf 'unable to resolve digest for %s\n' "${image}" >&2; exit 1; }
+
+python3 - "${devcontainer}" "${image}" "${digest}" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+image = sys.argv[2]
+digest = sys.argv[3]
+data = json.loads(path.read_text())
+if data.get("image") != image:
+    raise SystemExit(f"{path}: expected image {image!r}, found {data.get('image')!r}")
+data["image"] = f"{image}@{digest}"
+path.write_text(json.dumps(data, indent=2) + "\n")
+PY
+
+printf 'pinned %s to %s\n' "${image}" "${digest}"
+
