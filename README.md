@@ -44,6 +44,9 @@ See `docs/workflow.md` for the daily, worktree, cloud-task, and disposable
 cross-collection workflows. See `docs/account-boundaries.md` for the required
 development, personal, and retired-account split.
 
+Create isolated linked worktrees with `scripts/create-worktree`; do not manually
+copy and edit devcontainer state, cache, or Git mount settings.
+
 Secrets are never stored here or in project repositories. Put project secret files at `~/.config/dev-secrets/<repo>.env` with mode `0600` and pass them only to the command that needs them.
 
 ## Git authentication

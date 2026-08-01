@@ -32,21 +32,23 @@ GitHub's successful SSH test exits without providing a shell, which is expected.
 
 ## Parallel work
 
-Create a worktree beside the main checkout and open that worktree in its own
-devcontainer:
+Create a worktree beside the main checkout with the central helper, then open
+the reported path in its own Remote SSH window:
 
 ```bash
-git fetch origin
-git worktree add ../<repository>-<task> -b <task-branch> origin/main
+~/devel/dev-environments/scripts/create-worktree \
+  ~/devel/<type>/<repository> <task-branch> origin/main
 ```
 
-Each worktree gets its own container. If simultaneous tasks must not share caches
-either, change the volume names and Codex state slug in the copied
-`.devcontainer/devcontainer.json` before opening it.
+Run `git fetch origin` in the primary repository first when `origin/main` is not
+current. The helper creates a sibling checkout, corrects its UID ownership, and
+generates worktree-local devcontainer settings for Git metadata, caches, and
+Codex state. It marks only that generated devcontainer file `skip-worktree` so it
+cannot be accidentally committed with task changes.
 
 A linked worktree's `.git` file points to the primary checkout's shared Git
 database. Because a normal project container must not mount the primary source
-tree, its worktree devcontainer must instead:
+tree, the generated worktree devcontainer instead:
 
 - mount only the primary checkout's `.git` directory at a container-only path;
 - set `GIT_DIR` to that mount's `worktrees/<worktree-name>` directory;

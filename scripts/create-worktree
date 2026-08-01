@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+usage: create-worktree <repository-path> <branch> [base-ref] [worktree-path]
+
+Creates a sibling Git worktree with an isolated devcontainer. The default base
+is origin/main and the default path is <repository>-<sanitized-branch>.
+EOF
+}
+
+[[ $# -ge 2 && $# -le 4 ]] || { usage >&2; exit 2; }
+
+repository_input="$1"
+branch="$2"
+base_ref="${3:-origin/main}"
+
+repository="$(cd "${repository_input}" && pwd -P)"
+repository_name="$(basename "${repository}")"
+repository_parent="$(dirname "${repository}")"
+devcontainer="${repository}/.devcontainer/devcontainer.json"
+
+[[ -d "${repository}/.git" ]] || {
+    printf 'repository must be a primary checkout with a .git directory: %s\n' "${repository}" >&2
+    exit 1
+}
+[[ -f "${devcontainer}" ]] || {
+    printf 'missing devcontainer definition: %s\n' "${devcontainer}" >&2
+    exit 1
+}
+command -v jq >/dev/null || { printf 'jq is required\n' >&2; exit 1; }
+jq empty "${devcontainer}"
+
+task_slug="$(printf '%s' "${branch}" \
+    | sed -E 's/[^[:alnum:]._-]+/-/g; s|/|-|g; s/^-+//; s/-+$//' \
+    | tr '[:upper:]' '[:lower:]')"
+[[ -n "${task_slug}" ]] || { printf 'branch does not produce a usable task slug\n' >&2; exit 1; }
+
+worktree="${4:-${repository_parent}/${repository_name}-${task_slug}}"
+case "${worktree}" in
+    /*) ;;
+    *) worktree="$(pwd -P)/${worktree}" ;;
+esac
+
+[[ ! -e "${worktree}" ]] || { printf 'worktree path already exists: %s\n' "${worktree}" >&2; exit 1; }
+git -c "safe.directory=${repository}" -C "${repository}" \
+    show-ref --verify --quiet "refs/heads/${branch}" && {
+    printf 'branch already exists: %s\n' "${branch}" >&2
+    exit 1
+}
+git -c "safe.directory=${repository}" -C "${repository}" \
+    rev-parse --verify --quiet "${base_ref}^{commit}" >/dev/null || {
+    printf 'base ref does not resolve to a commit: %s\n' "${base_ref}" >&2
+    printf 'run git -C %q fetch origin and retry\n' "${repository}" >&2
+    exit 1
+}
+
+repository_uid="$(stat -c '%u' "${repository}")"
+repository_gid="$(stat -c '%g' "${repository}")"
+
+restore_git_ownership() {
+    [[ "${EUID}" -eq 0 ]] || return 0
+
+    for path in \
+        "${repository}/.git/config" \
+        "${repository}/.git/worktrees" \
+        "${repository}/.git/refs/heads" \
+        "${repository}/.git/logs/refs/heads"; do
+        [[ -e "${path}" ]] || continue
+        chown -R "${repository_uid}:${repository_gid}" "${path}"
+    done
+}
+
+git -c "safe.directory=${repository}" -C "${repository}" \
+    worktree add "${worktree}" -b "${branch}" "${base_ref}"
+
+if [[ "${EUID}" -eq 0 ]]; then
+    chown -R "${repository_uid}:${repository_gid}" "${worktree}"
+    restore_git_ownership
+elif [[ "${EUID}" -ne "${repository_uid}" ]]; then
+    printf 'worktree created, but UID %s cannot restore repository owner UID %s\n' \
+        "${EUID}" "${repository_uid}" >&2
+    exit 1
+fi
+
+worktree_gitdir="$(sed -n 's/^gitdir: //p' "${worktree}/.git")"
+worktree_admin="$(basename "${worktree_gitdir}")"
+worktree_name="$(basename "${worktree}")"
+state_slug="$(printf '%s' "${worktree_name}" | sed -E 's/[^[:alnum:]._-]+/-/g')"
+volume_slug="$(printf '%s' "${state_slug}" | tr '[:upper:]_.' '[:lower:]--')"
+
+workspace_folder="$(jq -r --arg fallback "/workspaces/${worktree_name}" \
+    '.workspaceFolder // $fallback' "${worktree}/.devcontainer/devcontainer.json")"
+git_mount_target="/workspace/.git-common/${repository_name}.git"
+git_dir="${git_mount_target}/worktrees/${worktree_admin}"
+
+if [[ "${repository}/.git" == "${HOME}/"* ]]; then
+    git_mount_source='${localEnv:HOME}/'"${repository#${HOME}/}"'/.git'
+else
+    git_mount_source="${repository}/.git"
+fi
+git_mount="type=bind,source=${git_mount_source},target=${git_mount_target}"
+
+temporary_json="$(mktemp "${worktree}/.devcontainer/devcontainer.json.tmp.XXXXXX")"
+jq \
+    --arg task "${task_slug}" \
+    --arg state_slug "${state_slug}" \
+    --arg volume_slug "${volume_slug}" \
+    --arg git_mount "${git_mount}" \
+    --arg git_dir "${git_dir}" \
+    --arg git_work_tree "${workspace_folder}" \
+    '
+    .name = (.name + " [" + $task + "]")
+    | .containerEnv.GIT_DIR = $git_dir
+    | .containerEnv.GIT_WORK_TREE = $git_work_tree
+    | .initializeCommand |= sub("codex-dev/[^ ]+"; "codex-dev/" + $state_slug)
+    | .mounts = (
+        .mounts
+        | map(
+            if contains(".local/state/codex-dev/") then
+                sub("codex-dev/[^,]+"; "codex-dev/" + $state_slug)
+            elif startswith("type=volume,") and contains("target=/home/vscode/.cache/uv") then
+                "type=volume,source=" + $volume_slug + "-uv-cache,target=/home/vscode/.cache/uv"
+            elif startswith("type=volume,") and contains("target=/home/vscode/.ansible") then
+                "type=volume,source=" + $volume_slug + "-ansible-cache,target=/home/vscode/.ansible"
+            else . end
+        )
+        | if any(. == $git_mount) then . else . + [$git_mount] end
+    )
+    | .postCreateCommand |= sub("bootstrap-codex-home [^ ]+"; "bootstrap-codex-home " + $state_slug)
+    | if has("postStartCommand") then
+        .postStartCommand |= sub("setup-codex-project [^ ]+"; "setup-codex-project " + $state_slug)
+      else . end
+    ' "${worktree}/.devcontainer/devcontainer.json" > "${temporary_json}"
+mv "${temporary_json}" "${worktree}/.devcontainer/devcontainer.json"
+
+git -c "safe.directory=${worktree}" -C "${worktree}" \
+    update-index --skip-worktree .devcontainer/devcontainer.json
+if [[ "${EUID}" -eq 0 ]]; then
+    chown "${repository_uid}:${repository_gid}" \
+        "${worktree}/.devcontainer/devcontainer.json"
+    restore_git_ownership
+fi
+
+printf 'created isolated worktree\n'
+printf '  repository: %s\n' "${repository}"
+printf '  worktree:   %s\n' "${worktree}"
+printf '  branch:     %s\n' "${branch}"
+printf '  base:       %s\n' "${base_ref}"
+printf '\nOpen the worktree in a new Remote SSH window and choose Dev Containers: Reopen in Container.\n'
+printf 'Run codex login once, then restart the container.\n'

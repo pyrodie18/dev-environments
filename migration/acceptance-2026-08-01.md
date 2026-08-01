@@ -86,11 +86,14 @@ Completed pilot gates:
 3. Used the migrated Ansible repository to test, commit, and push successfully.
 4. Ran the primary Gmail checkout and a linked worktree concurrently with
    isolated dependencies, caches, Codex state, branches, and source mounts.
+5. Added and smoke-tested `scripts/create-worktree`, which generates the required
+   isolated Git, Codex, dependency-cache, and UID configuration automatically.
+
+The user explicitly deferred real Gmail OAuth setup. It is not a blocker for the
+development-environment migration.
 
 Before the remaining repositories or shared environments are touched:
 
-1. Complete the Gmail MCP real OAuth/read-only end-to-end check if it was not
-   included in the user's pilot testing.
-2. Commit or separately back up every dirty repository before relocating it.
-3. Only then archive/retire the old shared collection mirror, shared Codex state,
+1. Commit or separately back up every dirty repository before relocating it.
+2. Only then archive/retire the old shared collection mirror, shared Codex state,
    and language-level devcontainers.

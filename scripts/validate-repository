@@ -12,6 +12,7 @@ required=(
     templates/ansible-collection/.devcontainer/devcontainer.json
     templates/ansible-integration/.devcontainer/devcontainer.json
     scripts/bootstrap-codex-home
+    scripts/create-worktree
     scripts/setup-codex-project
     scripts/build-images
     scripts/ensure-ssh-agent
@@ -22,6 +23,7 @@ for path in "${required[@]}"; do
 done
 
 bash -n scripts/bootstrap-codex-home
+bash -n scripts/create-worktree
 bash -n scripts/setup-codex-project
 bash -n scripts/ensure-ssh-agent
 
