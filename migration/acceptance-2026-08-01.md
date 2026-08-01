@@ -62,6 +62,13 @@ Both repositories remained clean and synchronized after the rebuild. Their mount
 inventories contained only the current repository, isolated Codex state,
 project-specific caches, the forwarded agent socket, and VS Code support state.
 
+A second `gmail_mcp` linked worktree was opened in its own devcontainer on branch
+`test/worktree-isolation`. The container mounted the linked checkout plus only
+the primary checkout's shared Git metadata, not its source tree. It used separate
+Codex state, uv cache, and `.venv`; its Codex Doctor and GitHub/SSH setup passed.
+Both containers ran the 18-test suite concurrently and passed. A temporary marker
+created in the worktree Codex home was not visible from the primary container.
+
 ## Recovery and gates
 
 - `legacy/ansible-devcontainer-history.bundle` verifies as complete.
@@ -77,12 +84,13 @@ Completed pilot gates:
 2. Rebuilt both pilots from their digest pins and verified automated Codex,
    GitHub plugin, SSH-agent, non-root, secret, and mount-isolation checks.
 3. Used the migrated Ansible repository to test, commit, and push successfully.
+4. Ran the primary Gmail checkout and a linked worktree concurrently with
+   isolated dependencies, caches, Codex state, branches, and source mounts.
 
 Before the remaining repositories or shared environments are touched:
 
-1. Exercise two simultaneous worktree containers.
-2. Complete the Gmail MCP real OAuth/read-only end-to-end check if it was not
+1. Complete the Gmail MCP real OAuth/read-only end-to-end check if it was not
    included in the user's pilot testing.
-3. Commit or separately back up every dirty repository before relocating it.
-4. Only then archive/retire the old shared collection mirror, shared Codex state,
+2. Commit or separately back up every dirty repository before relocating it.
+3. Only then archive/retire the old shared collection mirror, shared Codex state,
    and language-level devcontainers.

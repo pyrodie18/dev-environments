@@ -44,6 +44,20 @@ Each worktree gets its own container. If simultaneous tasks must not share cache
 either, change the volume names and Codex state slug in the copied
 `.devcontainer/devcontainer.json` before opening it.
 
+A linked worktree's `.git` file points to the primary checkout's shared Git
+database. Because a normal project container must not mount the primary source
+tree, its worktree devcontainer must instead:
+
+- mount only the primary checkout's `.git` directory at a container-only path;
+- set `GIT_DIR` to that mount's `worktrees/<worktree-name>` directory;
+- set `GIT_WORK_TREE` to the linked worktree's container workspace path; and
+- ensure both the linked checkout and its worktree-specific Git metadata are
+  writable by UID 1000.
+
+Keep the VM-side worktree links absolute. The VM currently uses Git 2.47, which
+does not understand the newer `extensions.relativeWorktrees` repository format.
+Do not mount the primary checkout's source files into the worktree container.
+
 Use Codex cloud for longer GitHub-backed tasks and review the resulting branch
 locally. Promote a repeated, stable procedure from `AGENTS.md` into a repo-local
 skill only after it has proven reusable.
