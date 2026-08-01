@@ -14,11 +14,18 @@ and loads the VM's development key. The container mounts only that agent socket;
 host SSH files and private keys are never mounted. Dependencies, Codex state,
 secrets, and caches are project-specific.
 
-After rebuilding a container, verify GitHub authentication with:
+On every container start, `setup-codex-project` checks the forwarded SSH key,
+verifies GitHub SSH authentication, ensures the curated GitHub plugin is
+installed when Codex is logged in, and runs `codex doctor`. These checks warn
+without making the development container unusable during a transient network
+failure.
+
+The first time a repository is opened, run `codex login` for its isolated Codex
+home. Restart the container once after login; subsequent setup and health checks
+are automatic. They can also be requested immediately with:
 
 ```bash
-ssh-add -l
-ssh -T git@github.com
+setup-codex-project <project-slug>
 ```
 
 GitHub's successful SSH test exits without providing a shell, which is expected.

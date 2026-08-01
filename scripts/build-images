@@ -2,7 +2,7 @@
 set -euo pipefail
 
 image_owner="${OWNER:-pyrodie18}"
-image_version="${IMAGE_VERSION:-2026.08.01}"
+image_version="${IMAGE_VERSION:-2026.08.01.1}"
 
 docker build \
     --file images/python/Dockerfile \
@@ -17,5 +17,5 @@ docker build \
 for image in python-dev ansible-dev; do
     docker run --rm \
         "ghcr.io/${image_owner}/${image}:${image_version}" \
-        sh -lc 'test "$(id -u)" = 1000 && test "$(id -un)" = vscode && command -v codex && codex --version'
+        sh -lc 'test "$(id -u)" = 1000 && test "$(id -un)" = vscode && command -v codex && command -v rg && command -v setup-codex-project && codex --version'
 done

@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+project_slug="${1:?usage: setup-codex-project <project-slug>}"
+
+bootstrap-codex-home "${project_slug}"
+
+if login_status="$(codex login status 2>&1)"; then
+    printf '%s\n' "${login_status}"
+
+    if plugin_list="$(codex plugin list 2>&1)"; then
+        if grep -Eq '^github@openai-curated[[:space:]]+installed, enabled' <<<"${plugin_list}"; then
+            printf 'Codex GitHub plugin is installed and enabled.\n'
+        elif codex plugin add github@openai-curated; then
+            printf 'Codex GitHub plugin installation verified.\n'
+        else
+            printf 'warning: Codex GitHub plugin installation failed; retry setup-codex-project later.\n' >&2
+        fi
+    else
+        printf 'warning: unable to inspect Codex plugins: %s\n' "${plugin_list}" >&2
+    fi
+
+    if ! codex doctor --summary --no-color --ascii; then
+        printf 'warning: codex doctor reported a problem; the devcontainer will remain available.\n' >&2
+    fi
+else
+    printf '%s\n' \
+        "Codex setup deferred: this repository's isolated Codex home is not logged in." \
+        "Run 'codex login', then restart the container or run 'setup-codex-project ${project_slug}'."
+fi
+
+if [[ -z "${SSH_AUTH_SOCK:-}" || ! -S "${SSH_AUTH_SOCK}" ]]; then
+    printf 'warning: forwarded SSH agent socket is unavailable. Rebuild the devcontainer.\n' >&2
+    exit 0
+fi
+
+if ! ssh-add -l; then
+    printf 'warning: the forwarded SSH agent has no usable key. Check the VM-side agent.\n' >&2
+    exit 0
+fi
+
+install -d -m 0700 "${HOME}/.ssh"
+ssh_result=0
+ssh_output="$(ssh \
+    -o BatchMode=yes \
+    -o ConnectTimeout=10 \
+    -o StrictHostKeyChecking=accept-new \
+    -T git@github.com 2>&1)" || ssh_result=$?
+printf '%s\n' "${ssh_output}"
+
+if grep -Fq 'successfully authenticated' <<<"${ssh_output}"; then
+    printf 'GitHub SSH authentication verified.\n'
+elif [[ "${ssh_result}" -eq 0 ]]; then
+    printf 'GitHub SSH connection verified.\n'
+else
+    printf 'warning: GitHub SSH authentication was not verified; retry setup-codex-project later.\n' >&2
+fi
+
+exit 0

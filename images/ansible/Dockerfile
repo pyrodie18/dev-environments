@@ -26,6 +26,7 @@ RUN apt-get update \
         make \
         openssh-client \
         pkg-config \
+        ripgrep \
         rsync \
         sshpass \
     && rm -rf /var/lib/apt/lists/*
@@ -40,9 +41,12 @@ RUN curl --fail --location --silent --show-error \
 
 COPY --from=uv /uv /uvx /usr/local/bin/
 COPY scripts/bootstrap-codex-home /usr/local/bin/bootstrap-codex-home
+COPY scripts/setup-codex-project /usr/local/bin/setup-codex-project
 COPY codex /usr/local/share/codex-container
 
-RUN chmod 0755 /usr/local/bin/bootstrap-codex-home \
+RUN chmod 0755 \
+        /usr/local/bin/bootstrap-codex-home \
+        /usr/local/bin/setup-codex-project \
     && install -d -o vscode -g vscode \
         /home/vscode/.ansible \
         /home/vscode/.cache \

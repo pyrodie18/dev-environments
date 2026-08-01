@@ -35,7 +35,7 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image.name }}
           tags: |
             type=ref,event=tag
-            type=raw,value=2026.08.01
+            type=match,pattern=v(.*),group=1
       - uses: docker/build-push-action@v6
         with:
           context: .
@@ -44,4 +44,3 @@ jobs:
           push: true
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
-

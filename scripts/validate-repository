@@ -12,6 +12,7 @@ required=(
     templates/ansible-collection/.devcontainer/devcontainer.json
     templates/ansible-integration/.devcontainer/devcontainer.json
     scripts/bootstrap-codex-home
+    scripts/setup-codex-project
     scripts/build-images
     scripts/ensure-ssh-agent
 )
@@ -19,6 +20,10 @@ required=(
 for path in "${required[@]}"; do
     [[ -e "${path}" ]] || { printf 'missing required path: %s\n' "${path}" >&2; exit 1; }
 done
+
+bash -n scripts/bootstrap-codex-home
+bash -n scripts/setup-codex-project
+bash -n scripts/ensure-ssh-agent
 
 python3 -m json.tool templates/python/.devcontainer/devcontainer.json >/dev/null
 python3 -m json.tool templates/ansible-collection/.devcontainer/devcontainer.json >/dev/null

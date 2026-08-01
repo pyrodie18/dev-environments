@@ -21,6 +21,7 @@
     "type=volume,source=__PROJECT_SLUG__-ansible-cache,target=/home/vscode/.ansible"
   ],
   "postCreateCommand": "bootstrap-codex-home __PROJECT_SLUG__ && uv sync --frozen --group dev && uv run --frozen ansible-galaxy collection install -r requirements.yml -p /home/vscode/.ansible/collections",
+  "postStartCommand": "setup-codex-project __PROJECT_SLUG__",
   "customizations": {
     "vscode": {
       "extensions": [
