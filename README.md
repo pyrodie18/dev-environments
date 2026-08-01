@@ -9,9 +9,8 @@ Versioned, non-root development images and project templates for the repositorie
 
 The Dockerfiles pin the upstream Dev Container and uv images by digest, and pin
 the standalone Codex CLI release by version and SHA-256. Project devcontainer
-definitions use a release tag during local bootstrap. After the first GHCR
-publication, run `scripts/pin-image-digest` in each project to replace that tag
-with its registry digest.
+definitions pin the published release tag to its immutable GHCR manifest digest.
+Use `scripts/pin-image-digest` after publishing each future image release.
 
 ## Local build
 
@@ -28,6 +27,13 @@ The local tags match the tags produced by CI:
 ```text
 ghcr.io/pyrodie18/python-dev:2026.08.01
 ghcr.io/pyrodie18/ansible-dev:2026.08.01
+```
+
+Published manifest digests:
+
+```text
+python-dev  sha256:93e608ed35928a3c2cb004d9399b0dc458690645ad5b8e8b373aeac0da8b9cbc
+ansible-dev sha256:52d742925c08a947d47af7a35dc9bc0a08ae9b9493145bf0a87edcd037c64e35
 ```
 
 ## New projects

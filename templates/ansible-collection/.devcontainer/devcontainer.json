@@ -1,6 +1,6 @@
 {
   "name": "__NAMESPACE__.__COLLECTION__",
-  "image": "ghcr.io/pyrodie18/ansible-dev:2026.08.01",
+  "image": "ghcr.io/pyrodie18/ansible-dev:2026.08.01@sha256:52d742925c08a947d47af7a35dc9bc0a08ae9b9493145bf0a87edcd037c64e35",
   "remoteUser": "vscode",
   "runArgs": [
     "--security-opt",

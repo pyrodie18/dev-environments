@@ -4,17 +4,19 @@
 
 - Python local tag: `ghcr.io/pyrodie18/python-dev:2026.08.01`
   - local image ID: `sha256:fb32c79322f270ea8abcb31e0f3585622572bc1f22d0be3bb37004b4d79b60ae`
+  - GHCR manifest digest: `sha256:93e608ed35928a3c2cb004d9399b0dc458690645ad5b8e8b373aeac0da8b9cbc`
 - Ansible local tag: `ghcr.io/pyrodie18/ansible-dev:2026.08.01`
   - local image ID: `sha256:f3ce9b0038768fc091308a207a5aa3b7e16f936484e15cb09e067acb2d31f094`
+  - GHCR manifest digest: `sha256:52d742925c08a947d47af7a35dc9bc0a08ae9b9493145bf0a87edcd037c64e35`
 
 Both images run as `vscode` (UID 1000), set `HOME=/home/vscode`, use Python
 3.12.13, uv 0.8.15, and the checksum-verified standalone Codex CLI 0.144.4.
 Both expose Codex at `/usr/local/bin/codex` and contain no `OPENAI_API_KEY`.
 Neither image contains project dependencies or credentials.
 
-These are local image IDs, not portable GHCR manifest digests. The publication
-and digest-pinning gate remains open until the new GitHub repository and package
-exist.
+GitHub Actions run `30714557809` published both images successfully from tag
+`v2026.08.01`. Both pilots and all templates are pinned to the portable GHCR
+manifest digests above.
 
 ## Python pilot: gmail_mcp
 
@@ -60,15 +62,18 @@ successfully during that real sandbox invocation.
 - Dirty repositories listed in `snapshot-2026-08-01.md` were not modified.
 - The old shared Ansible environment and outer Git repository remain in place.
 
+Completed publication gate:
+
+1. Created and pushed `pyrodie18/dev-environments` with an independent root
+   commit, published both GHCR images, and pinned every template and pilot image.
+
 Before the remaining repositories or shared environments are touched:
 
-1. Create and push `pyrodie18/dev-environments`, publish both GHCR images, and pin
-   every template and pilot image reference with `scripts/pin-image-digest`.
-2. Open each pilot through Remote SSH + Dev Containers, run `codex login` with the
+1. Open each pilot through Remote SSH + Dev Containers, run `codex login` with the
    primary development account, install `github@openai-curated`, and run
    `codex doctor`.
-3. Exercise two simultaneous worktree containers and use at least one migrated
+2. Exercise two simultaneous worktree containers and use at least one migrated
    production repository successfully.
-4. Commit or separately back up every dirty repository before relocating it.
-5. Only then archive/retire the old shared collection mirror, shared Codex state,
+3. Commit or separately back up every dirty repository before relocating it.
+4. Only then archive/retire the old shared collection mirror, shared Codex state,
    and language-level devcontainers.
