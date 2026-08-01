@@ -25,15 +25,15 @@ that have Make installed.
 The local tags match the tags produced by CI:
 
 ```text
-ghcr.io/pyrodie18/python-dev:2026.08.01
-ghcr.io/pyrodie18/ansible-dev:2026.08.01
+ghcr.io/pyrodie18/python-dev:2026.08.01.1
+ghcr.io/pyrodie18/ansible-dev:2026.08.01.1
 ```
 
 Published manifest digests:
 
 ```text
-python-dev  sha256:93e608ed35928a3c2cb004d9399b0dc458690645ad5b8e8b373aeac0da8b9cbc
-ansible-dev sha256:52d742925c08a947d47af7a35dc9bc0a08ae9b9493145bf0a87edcd037c64e35
+python-dev  sha256:f9f58a7231d037ca519f987c7cb1d58de00083ffafbcc8c3ef52697b8fa15c95
+ansible-dev sha256:809842b075b72df2ac1e93313909e8950e31349b52039cb0d2eda88066ac889e
 ```
 
 ## New projects
@@ -56,7 +56,7 @@ development key is not `~/.ssh/id_ed25519`.
 
 ## Codex state
 
-Every project mounts an isolated host directory from `~/.local/state/codex-dev/<repo-slug>` as `/home/vscode/.codex`. The image-provided `bootstrap-codex-home` command creates model-neutral `fast` and `deep-review` profiles and forces ChatGPT authentication. Run `codex login` once inside each new project container.
+Every project mounts an isolated host directory from `~/.local/state/codex-dev/<repo-slug>` as `/home/vscode/.codex`. The image-provided `bootstrap-codex-home` command creates model-neutral `fast` and `deep-review` profiles and forces ChatGPT authentication. Run `codex login` once inside each new project container. On later starts, `setup-codex-project` automatically verifies Codex health, the curated GitHub plugin, and forwarded GitHub SSH authentication.
 
 ## Codex sandbox
 
@@ -68,4 +68,4 @@ AppArmor, add capabilities, use privileged mode, or mount the Docker socket.
 
 ## Publishing
 
-Push this repository to `pyrodie18/dev-environments`. The `publish-images` workflow publishes both images to GHCR on a version tag such as `v2026.08.01` and on manual dispatch. Package write permission is supplied by GitHub Actions; no registry credential belongs in this repository.
+Push this repository to `pyrodie18/dev-environments`. The `publish-images` workflow publishes both images to GHCR on a version tag such as `v2026.08.01.1` and on manual dispatch. Package write permission is supplied by GitHub Actions; no registry credential belongs in this repository.

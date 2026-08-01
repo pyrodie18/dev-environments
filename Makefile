@@ -1,4 +1,4 @@
-IMAGE_VERSION ?= 2026.08.01
+IMAGE_VERSION ?= 2026.08.01.1
 OWNER ?= pyrodie18
 
 .PHONY: build build-python build-ansible validate

@@ -2,20 +2,20 @@
 
 ## Base images
 
-- Python local tag: `ghcr.io/pyrodie18/python-dev:2026.08.01`
-  - local image ID: `sha256:fb32c79322f270ea8abcb31e0f3585622572bc1f22d0be3bb37004b4d79b60ae`
-  - GHCR manifest digest: `sha256:93e608ed35928a3c2cb004d9399b0dc458690645ad5b8e8b373aeac0da8b9cbc`
-- Ansible local tag: `ghcr.io/pyrodie18/ansible-dev:2026.08.01`
-  - local image ID: `sha256:f3ce9b0038768fc091308a207a5aa3b7e16f936484e15cb09e067acb2d31f094`
-  - GHCR manifest digest: `sha256:52d742925c08a947d47af7a35dc9bc0a08ae9b9493145bf0a87edcd037c64e35`
+- Python local tag: `ghcr.io/pyrodie18/python-dev:2026.08.01.1`
+  - local image ID: `sha256:369d6e5e1f1054957f32702eed52af8dcf84ee7f36ef9ab5e397dd38cd0ef8cb`
+  - GHCR manifest digest: `sha256:f9f58a7231d037ca519f987c7cb1d58de00083ffafbcc8c3ef52697b8fa15c95`
+- Ansible local tag: `ghcr.io/pyrodie18/ansible-dev:2026.08.01.1`
+  - local image ID: `sha256:e173ed8d5b078061fe699c24078a8d3892efaf979ab9aeacf553a79f6ae7c7b7`
+  - GHCR manifest digest: `sha256:809842b075b72df2ac1e93313909e8950e31349b52039cb0d2eda88066ac889e`
 
 Both images run as `vscode` (UID 1000), set `HOME=/home/vscode`, use Python
 3.12.13, uv 0.8.15, and the checksum-verified standalone Codex CLI 0.144.4.
-Both expose Codex at `/usr/local/bin/codex` and contain no `OPENAI_API_KEY`.
+Both expose Codex at `/usr/local/bin/codex`, include ripgrep 13.0.0, and contain no `OPENAI_API_KEY`.
 Neither image contains project dependencies or credentials.
 
-GitHub Actions run `30714557809` published both images successfully from tag
-`v2026.08.01`. Both pilots and all templates are pinned to the portable GHCR
+GitHub Actions run `30715348030` published both images successfully from tag
+`v2026.08.01.1`. Both pilots and all templates are pinned to the portable GHCR
 manifest digests above.
 
 ## Python pilot: gmail_mcp

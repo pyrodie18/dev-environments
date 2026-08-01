@@ -1,6 +1,6 @@
 {
   "name": "__PROJECT_NAME__",
-  "image": "ghcr.io/pyrodie18/python-dev:2026.08.01@sha256:93e608ed35928a3c2cb004d9399b0dc458690645ad5b8e8b373aeac0da8b9cbc",
+  "image": "ghcr.io/pyrodie18/python-dev:2026.08.01.1@sha256:f9f58a7231d037ca519f987c7cb1d58de00083ffafbcc8c3ef52697b8fa15c95",
   "remoteUser": "vscode",
   "runArgs": [
     "--security-opt",
