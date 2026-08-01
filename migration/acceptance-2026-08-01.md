@@ -54,6 +54,14 @@ with only `seccomp=unconfined`. No AppArmor override, capability, privileged mod
 or Docker socket was required. A generated isolated Codex home also loaded
 successfully during that real sandbox invocation.
 
+Both pilots were rebuilt from the `2026.08.01.1` digest pins. In each live
+container, Codex Doctor reported 17 checks OK, 0 warnings, and 0 failures;
+ripgrep was detected; `github@openai-curated` was installed and enabled; and the
+forwarded ED25519 agent authenticated successfully to GitHub as `pyrodie18`.
+Both repositories remained clean and synchronized after the rebuild. Their mount
+inventories contained only the current repository, isolated Codex state,
+project-specific caches, the forwarded agent socket, and VS Code support state.
+
 ## Recovery and gates
 
 - `legacy/ansible-devcontainer-history.bundle` verifies as complete.
@@ -62,18 +70,19 @@ successfully during that real sandbox invocation.
 - Dirty repositories listed in `snapshot-2026-08-01.md` were not modified.
 - The old shared Ansible environment and outer Git repository remain in place.
 
-Completed publication gate:
+Completed pilot gates:
 
 1. Created and pushed `pyrodie18/dev-environments` with an independent root
    commit, published both GHCR images, and pinned every template and pilot image.
+2. Rebuilt both pilots from their digest pins and verified automated Codex,
+   GitHub plugin, SSH-agent, non-root, secret, and mount-isolation checks.
+3. Used the migrated Ansible repository to test, commit, and push successfully.
 
 Before the remaining repositories or shared environments are touched:
 
-1. Open each pilot through Remote SSH + Dev Containers, run `codex login` with the
-   primary development account, install `github@openai-curated`, and run
-   `codex doctor`.
-2. Exercise two simultaneous worktree containers and use at least one migrated
-   production repository successfully.
+1. Exercise two simultaneous worktree containers.
+2. Complete the Gmail MCP real OAuth/read-only end-to-end check if it was not
+   included in the user's pilot testing.
 3. Commit or separately back up every dirty repository before relocating it.
 4. Only then archive/retire the old shared collection mirror, shared Codex state,
    and language-level devcontainers.
